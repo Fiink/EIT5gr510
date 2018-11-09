@@ -15,7 +15,7 @@ phaseB = unwrap(angle(squeeze(csi(:,2,:)).'));
 phaseC = unwrap(angle(squeeze(csi(:,3,:)).'));
 phaseAB = median(phaseA - phaseB)+pi;
 phaseAC = median(phaseA - phaseC)+pi;
-phaseBC = median(phaseB - phaseC)+pi;
+phaseBC = median(phaseB - phaseC)+pi;%Mads
 
 disp('Phase difference (in rad):');
 temp = [phaseAB, phaseAC, phaseBC];
