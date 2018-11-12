@@ -1,17 +1,14 @@
-%Add subfolder 
+% TEST_ANGLE Used to check angles of packet, only used for testing
+clear;
+
+%Add subfolder containing provided MATLAB-scripts from CSI-tool
 folder = fileparts(which(mfilename)); 
 addpath(genpath(folder));
 
-clear;
-clf;
-
-% Load csi trace
-% NOTE: .csi file is a MEX-file, compiled from read_bfee.c
+%Load CSI trace packet
 csi_trace = read_bf_file('sample_data/log.all_csi.6.7.6');
 
-%Convert CSI in absolute units, rather than Intel's internal reference
-%level. This command is run a specific packet.
-%NOTE: Units are linear (NOT dB)  [Unit: 'Voltage space']
+%Convert CSI values to absolute units
 csi = get_scaled_csi(csi_trace{1});
 
 phaseA = unwrap(angle(squeeze(csi(:,1,:)).')); 
@@ -19,7 +16,7 @@ phaseB = unwrap(angle(squeeze(csi(:,2,:)).'));
 phaseC = unwrap(angle(squeeze(csi(:,3,:)).'));
 phaseAB = median(phaseA - phaseB)+pi;
 phaseAC = median(phaseA - phaseC)+pi;
-phaseBC = median(phaseB - phaseC)+pi;%Mads
+phaseBC = median(phaseB - phaseC)+pi;
 
 disp('Phase difference (in rad):');
 temp = [phaseAB, phaseAC, phaseBC];
@@ -50,4 +47,3 @@ angleCRP = (angleAB+(angleAC-pi/3)+(angleBC+pi/3))/3;
 disp('AngleCRP (rad then deg)');
 disp(angleCRP);
 disp(angleCRP*180/pi);
-
