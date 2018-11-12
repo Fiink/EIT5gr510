@@ -1,13 +1,13 @@
 clear;
-clf;
 
-% Load csi trace
-% NOTE: .csi file is a MEX-file, compiled from read_bfee.c
+%Add subfolder containing provided MATLAB-scripts from CSI-tool
+folder = fileparts(which(mfilename)); 
+addpath(genpath(folder));
+
+%Load CSI trace packet
 csi_trace = read_bf_file('sample_data/log.all_csi.6.7.6');
 
-%Convert CSI in absolute units, rather than Intel's internal reference
-%level. This command is run a specific packet.
-%NOTE: Units are linear (NOT dB)  [Unit: 'Voltage space']
+%Convert CSI values to absolute units
 csi = get_scaled_csi(csi_trace{1});
 
 phaseA = unwrap(angle(squeeze(csi(:,1,:)).')); 
