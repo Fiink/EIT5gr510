@@ -19,11 +19,10 @@ function ret = direction(mexfile, packet)
     phaseBC = median(phaseB - phaseC)+pi;
 
     % Angle calculation
-    angleAB = (0.125/2)*sin((0.125*(2*pi-phaseAB)/(2*pi))/(300*10^6)*300*10^6);
-    angleAC = (0.125/2)*sin((0.125*(2*pi-phaseAC)/(2*pi))/(300*10^6)*300*10^6);
-    angleBC = (0.125/2)*sin((0.125*(2*pi-phaseBC)/(2*pi))/(300*10^6)*300*10^6);
-    angleCRP = (angleAB+(angleAC-pi/3)+(angleBC+pi/3))/3;
+    theta1 = 0.125/2*sin((0.125*(2*pi-phaseAB)/(2*pi)));
+    theta2 = 0.125/2*sin((0.125*(2*pi-phaseAC)/(2*pi)));
+    theta3 = 0.125/2*sin((0.125*(2*pi-phaseBC)/(2*pi)));
+    thetaCRP = (theta1+(theta2-pi/3)+(theta3+pi/3))/3;
     
-    ret = angleCRP;
+    ret = thetaCRP;
 end
-
