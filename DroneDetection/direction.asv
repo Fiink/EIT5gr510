@@ -16,9 +16,9 @@ function ret = direction(mexfile, packet)
     phaseA = unwrap(angle(squeeze(csi(:,1,:)).')); 
     phaseB = unwrap(angle(squeeze(csi(:,2,:)).'));
     phaseC = unwrap(angle(squeeze(csi(:,3,:)).'));
-    phaseAB = mean(phaseB - phaseA);
-    phaseAC = mean(phaseC - phaseA);
-    phaseBC = mean(phaseC - phaseB);
+    phaseAB = median(phaseB - phaseA);
+    phaseAC = median(phaseC - phaseA);
+    phaseBC = median(phaseC - phaseB);
 
     % Angle calculation
     theta1 = asin((sign(phaseAB)*0.125/2*((pi-abs(phaseAB))/pi))/d_antenna);

@@ -14,9 +14,9 @@ csi = get_scaled_csi(csi_trace{1});
 phaseA = unwrap(angle(squeeze(csi(:,1,:)).')); 
 phaseB = unwrap(angle(squeeze(csi(:,2,:)).'));
 phaseC = unwrap(angle(squeeze(csi(:,3,:)).'));
-phaseAB = median(phaseA - phaseB)+pi;
-phaseAC = median(phaseA - phaseC)+pi;
-phaseBC = median(phaseB - phaseC)+pi;
+phaseAB = median(phaseB - phaseA);
+phaseAC = median(phaseC - phaseA);
+phaseBC = median(phaseC - phaseB);
 
 disp('Phase difference (in rad):');
 temp = [phaseAB, phaseAC, phaseBC];
