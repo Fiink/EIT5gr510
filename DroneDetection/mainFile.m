@@ -9,7 +9,8 @@ id=0;
 
 while 1
     for c = 1:large
-        if(isempty(strfind(folder(2+c).name, '60:60:1F:'))==0)
+%        if(isempty(strfind(folder(2+c).name, '60:60:1F:'))==0)
+        if(isempty(strfind(folder(2+c).name, '6C:72:20:'))==0)
             id=c;
             break;
         end
