@@ -21,20 +21,24 @@
     phaseC = unwrap(angle(squeeze(csi(:,3,:)).'));
     
     %Determine size of array (In case of multiple transmitter antennas)
-    [m,n] = size(phaseA);
+    [m,n] = size(A);
     
-    %Determine angle for each transmitter-signal
-    thetaCRP = 0;    % Return value
     for i = 1:n
        phaseAB = mean(phaseB(:,i) - phaseA(:,i));
        phaseAC = mean(phaseC(:,i) - phaseA(:,i));
        phaseBC = mean(phaseC(:,i) - phaseB(:,i));
        
-       theta1 = asin((sign(phaseAB)*l_f/2*((pi-abs(phaseAB))/pi))/d_antenna);
-       theta2 = asin((sign(phaseAC)*l_f/2*((pi-abs(phaseAC))/pi))/d_antenna);
-       theta3 = asin((sign(phaseBC)*l_f/2*((pi-abs(phaseBC))/pi))/d_antenna);
-       thetaCRP = thetaCRP + (theta1+(theta2-pi/3)+(theta3+pi/3))/3;
+        
     end
+%     phaseAB = mean(phaseB - phaseA);
+%     phaseAC = mean(phaseC - phaseA);
+%     phaseBC = mean(phaseC - phaseB);
+
+    % Angle calculation
+%     theta1 = asin((sign(phaseAB)*lf/2*((pi-abs(phaseAB))/pi))/d_antenna);
+%     theta2 = asin((sign(phaseAC)*lf/2*((pi-abs(phaseAC))/pi))/d_antenna);
+%     theta3 = asin((sign(phaseBC)*lf/2*((pi-abs(phaseBC))/pi))/d_antenna);
+%     thetaCRP = (theta1+(theta2-pi/3)+(theta3+pi/3))/3;
     
-    % Take the average value of thetaCRP-calculations
-    thetaCRP = thetaCRP/n;
+    %ret = thetaCRP;
+    %ret = 404;
