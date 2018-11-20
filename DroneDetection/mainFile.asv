@@ -1,12 +1,9 @@
-% MAINFILE Main MATLAB script, detects drone and computes AoA
+
+MAINFILE Main MATLAB script to both detect if the Wi-Fi card was
+connected to a drone, and to determine the angle towards it.
+
 clear;
 done = 0;
-LUT = ['90:03:B7:';'60:60:1F:';'D4:D9:19:';'F4:DD:9E:';'D4:32:60:';'04:41:69:';'D8:96:85:'];
-% LUT indexeres på følgende måde:
-% Plads 1: LUT(1,;);
-% Plads 2: LUT(2,;); 
-% osv. Man får følgende tilbage:   ans = 'D4:32:60:'
-% Så kan der bare laves et for loop for de 7 elementer.
 start = '/sys/kernel/debug/ieee80211/phy0/netdev:wlan0/stations/';
 folder = dir(start);
 [large,z] = size(folder);
