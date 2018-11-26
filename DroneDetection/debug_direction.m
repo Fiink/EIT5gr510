@@ -28,7 +28,7 @@ X = ['Antal transmitter-antenner: ',num2str(n)];
 disp(X);
 disp(' ');
 
-for i = 2:n    % OBS TAGER KUN ANTENNE 2
+for i = 1:n    % OBS TAGER KUN ANTENNE 2
    X=['Begynder udregning for antenne ',num2str(i)];
    disp(X);
    
@@ -123,6 +123,9 @@ X = ['Endelig vaerdi af thetaCRP: ',num2str(thetaCRP)];
 disp(X);
 
 
+
+% Plots
+subplot(2,1,1);
 plot(phaseB(:,2)-phaseA(:,2));
 hold on;
 plot(phaseC(:,2)-phaseA(:,2));
@@ -132,7 +135,17 @@ y=pi;
 plot(x,y*ones(size(x)))
 y=-pi;
 plot(x,y*ones(size(x)))
-legend('Faseforskel AB','Faseforskel AC','Faseforskel BC','Upper limit','Lower limit','Location','NorthEast');
+legend('AB','AC','BC','Location','NorthEast');
+xlabel('Subcarrier index');
+ylabel('Phase-difference');
+hold off;
+
+subplot(2,1,2);
+plot(db(abs(squeeze(csi(2,:,:)).')))
+hold on;
+legend('RX Antenna A', 'RX Antenna B', 'RX Antenna C', 'Location', 'SouthEast' );
+xlabel('Subcarrier index');
+ylabel('SNR [dB]');
 hold off;
 
 %{
