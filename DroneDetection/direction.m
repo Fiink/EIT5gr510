@@ -5,7 +5,6 @@ function thetaCRP = direction(mexfile, packet)
     c = 299792458;
     lf = c/f;  % Wavelength of signal (c/f)
     thetaCRP = 0;       % Return value
-   
 
     %Add subfolder containing provided MATLAB-scripts from CSI-tool
     folder = fileparts(which(mfilename)); 
@@ -20,73 +19,61 @@ function thetaCRP = direction(mexfile, packet)
     phaseB = unwrap(angle(squeeze(csi(:,2,:)).'));
     phaseC = unwrap(angle(squeeze(csi(:,3,:)).'));
     
-    %Determine size of array. phaseA is a 30xn array, where n
+    %Determine size of arrays. phaseA is a 30xn array, where n
     %corresponds to the amount of transmitter-antennas.
     [~,n] = size(phaseA);
     
     %Determine angle for each transmitter-signal
-    for i = 2:n    % OBS TAGER KUN ANTENNE 2
-       % Faseforskel
+    for i = 1:n
+       % Phase difference
        phaseAB = mean(phaseB(:,i) - phaseA(:,i));
+       phaseBC = mean(phaseC(:,i) - phaseB(:,i));
+       phaseAC = mean(phaseC(:,i) - phaseA(:,i));
+       
+       % Change phase direction - If phase difference is more than pi, 
+       % 2*pi is either added or substracted.
        if (phaseAB > pi)
            phaseAB = mean(phaseB(:,i) - phaseA(:,i) - 2*pi);
        elseif (phaseAB < -pi)
            phaseAB = mean(phaseB(:,i) - phaseA(:,i) + 2*pi);
        end
-       phaseAC = mean(phaseC(:,i) - phaseA(:,i));   
        if (phaseAC > pi)
            phaseAC = mean(phaseC(:,i) - phaseA(:,i) - 2*pi);
        elseif (phaseAC < -pi)
            phaseAC = mean(phaseC(:,i) - phaseA(:,i) + 2*pi);
        end
-       phaseBC = mean(phaseC(:,i) - phaseB(:,i));
        if (phaseBC > pi)
            phaseBC = mean(phaseC(:,i) - phaseB(:,i) - 2*pi);
        elseif (phaseBC < -pi)
            phaseBC = mean(phaseC(:,i) - phaseB(:,i) + 2*pi);
        end
 
-       % Beregning af d (afstand af boelge)
-       dAB = sign(phaseAB)*lf/2*(1-(pi-abs(phaseAB))/pi);
-       dAC = sign(phaseAC)*lf/2*(1-(pi-abs(phaseAC))/pi);
-       dBC = sign(phaseBC)*lf/2*(1-(pi-abs(phaseBC))/pi);
+       % Time difference calculation
+       tauAB = sign(phaseAB)*lf/2*(1-(pi-abs(phaseAB))/pi)/c;
+       tauAC = sign(phaseAC)*lf/2*(1-(pi-abs(phaseAC))/pi)/c;
+       tauBC = sign(phaseBC)*lf/2*(1-(pi-abs(phaseBC))/pi)/c;
 
-       % Beregning af tidsforskel
-       tauAB = dAB/c;
-       tauAC = dAC/c;
-       tauBC = dBC/c;
-
-       % Beregning af vinkel
-       fracAB = (tauAB*c)/d_antenna;
-       fracAC = (tauAC*c)/d_antenna;
-       fracBC = (tauBC*c)/d_antenna;
-       if fracAB > 1
-           fracAB = 1;
-       elseif fracAB < -1
-           fracAB = -1;
-       elseif fracAC > 1
-           fracAC = 1;
-       elseif fracAC < -1
-           fracAC = -1;
-       elseif fracBC > 1
-           fracBC = 1;
-       elseif fracBC < -1
-           fracBC = -1;
-       end
-
-       thetaAB = asin(fracAB);
-       thetaAC = asin(fracAC);
-       thetaBC = asin(fracBC);
-        
-       %Converts rads to degrees
-       thetaABdeg = thetaAB*180/pi;
-       thetaACdeg = thetaAC*180/pi;
-       thetaBCdeg = thetaBC*180/pi;
+       % Angle calculation and conversion to degrees
+       thetaAB = asin((tauAB*c)/d_antenna)*180/pi;
+       thetaAC = asin((tauAC*c)/d_antenna)*180/pi;
+       thetaBC = asin((tauBC*c)/d_antenna)*180/pi;
        
-       %calculate the CRP
-       thetaCRP = thetaCRP + (thetaABdeg + thetaACdeg-60 + thetaBCdeg+60)/3;
+       % Remove imaginary parts (if present)
+       % These should only occur if an error during logging has occured
+       if imag(thetaAB) ~= 0
+           thetaAB = real(thetaAB);
+       end
+       if imag(thetaAC) ~= 0
+           thetaAC = real(thetaAC);
+       end
+       if imag(thetaBC) ~= 0
+           thetaBC = real(thetaBC);
+       end
+       
+       %Calculate the CRP
+       thetaCRP = thetaCRP+(thetaAB+thetaAC-pi/3+thetaBC+pi/3)/3;
     end
     
-    % Take the average value of thetaCRP-calculations
+    % Take the average value of theteCRP for each transmitter-antenna
     thetaCRP = thetaCRP/n;
 end
