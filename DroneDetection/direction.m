@@ -5,6 +5,7 @@ function thetaCRP = direction(mexfile, packet)
     c = 299792458;
     lf = c/f;  % Wavelength of signal (c/f)
     thetaCRP = 0;       % Return value
+    error = 0;      % Amount of angle-calculations resulting in a complex value
 
     %Add subfolder containing provided MATLAB-scripts from CSI-tool
     folder = fileparts(which(mfilename)); 
@@ -32,20 +33,14 @@ function thetaCRP = direction(mexfile, packet)
        
        % Change phase direction - If phase difference is more than pi, 
        % 2*pi is either added or substracted.
-       if (phaseAB > pi)
-           phaseAB = mean(phaseB(:,i) - phaseA(:,i) - 2*pi);
-       elseif (phaseAB < -pi)
-           phaseAB = mean(phaseB(:,i) - phaseA(:,i) + 2*pi);
+       if abs(phaseAB) > pi
+           phaseAB = mean(modulo(phaseB(:,i) - phaseA(:,i) +pi,2*pi));
        end
-       if (phaseAC > pi)
-           phaseAC = mean(phaseC(:,i) - phaseA(:,i) - 2*pi);
-       elseif (phaseAC < -pi)
-           phaseAC = mean(phaseC(:,i) - phaseA(:,i) + 2*pi);
+       if abs(phaseAC) > pi
+           phaseAC = mean(modulos(phaseC(:,i) - phaseA(:,i) +pi,2*pi));
        end
-       if (phaseBC > pi)
-           phaseBC = mean(phaseC(:,i) - phaseB(:,i) - 2*pi);
-       elseif (phaseBC < -pi)
-           phaseBC = mean(phaseC(:,i) - phaseB(:,i) + 2*pi);
+       if abs(phaseBC) > pi
+           phaseBC = mean(modulos(phaseC(:,i) - phaseB(:,i) +pi,2*pi));
        end
 
        % Time difference calculation
@@ -58,16 +53,11 @@ function thetaCRP = direction(mexfile, packet)
        thetaAC = asin((tauAC*c)/d_antenna)*180/pi;
        thetaBC = asin((tauBC*c)/d_antenna)*180/pi;
        
-       % Remove imaginary parts (if present)
-       % These should only occur if an error during logging has occured
-       if imag(thetaAB) ~= 0
-           thetaAB = real(thetaAB);
-       end
-       if imag(thetaAC) ~= 0
-           thetaAC = real(thetaAC);
-       end
-       if imag(thetaBC) ~= 0
-           thetaBC = real(thetaBC);
+       % Check for imaginary parts, indicating an error occured during
+       % logging
+       if imag(thetaAB) ~= 0 || imag(thetaAC) ~= 0 || imag(thetaBC) ~= 0
+           error = error + 1;
+           break;   % Stop current calculation
        end
        
        %Calculate the CRP
@@ -75,5 +65,11 @@ function thetaCRP = direction(mexfile, packet)
     end
     
     % Take the average value of theteCRP for each transmitter-antenna
-    thetaCRP = thetaCRP/n;
+    if (n-error) > 0
+        thetaCRP = thetaCRP/(n-error);
+    else
+        disp('Error: No valid angles for this transmission')
+        thetaCRP = 100; % Is not a valid output (not -90 to +90 deg), 
+                        % and can be check for in the main file
+    end
 end
