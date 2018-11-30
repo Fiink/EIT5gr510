@@ -8,7 +8,7 @@ function thetaCRP = direction(mexfile, packet)
     error = 0;      % Amount of angle-calculations resulting in a complex value
 
     %Add subfolder containing provided MATLAB-scripts from CSI-tool
-    folder = fileparts(which(mfilename)); 
+    folder = fileparts(which(mfilename));
     addpath(genpath(folder));
 
     %Load CSI trace packet and convert to absolute unit
@@ -33,13 +33,19 @@ function thetaCRP = direction(mexfile, packet)
        
        % Change phase direction - If phase difference is more than pi, 
        % 2*pi is either added or substracted.
-       if abs(phaseAB) > pi
+       if phaseAB > pi
+           phaseAB = mean(modulo(phaseB(:,i) - phaseA(:,i) -pi,2*pi));
+       elseif phaseAB < -pi
            phaseAB = mean(modulo(phaseB(:,i) - phaseA(:,i) +pi,2*pi));
        end
-       if abs(phaseAC) > pi
+       if phaseAC > pi
+           phaseAC = mean(modulos(phaseC(:,i) - phaseA(:,i) -pi,2*pi));
+       elseif phaseAC < -pi
            phaseAC = mean(modulos(phaseC(:,i) - phaseA(:,i) +pi,2*pi));
        end
-       if abs(phaseBC) > pi
+       if phaseBC > pi
+           phaseBC = mean(modulos(phaseC(:,i) - phaseB(:,i) -pi,2*pi));
+       elseif phaseBC < -pi
            phaseBC = mean(modulos(phaseC(:,i) - phaseB(:,i) +pi,2*pi));
        end
 
@@ -69,7 +75,7 @@ function thetaCRP = direction(mexfile, packet)
         thetaCRP = thetaCRP/(n-error);
     else
         disp('Error: No valid angles for this transmission')
-        thetaCRP = 100; % Is not a valid output (not -90 to +90 deg), 
-                        % and can be check for in the main file
+        thetaCRP = 100; % 100 not a valid output (not -90 to +90 deg), 
+                        % and can be checked for in the main file
     end
 end
