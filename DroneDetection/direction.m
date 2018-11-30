@@ -34,19 +34,19 @@ function thetaCRP = direction(mexfile, packet)
        % Change phase direction - If phase difference is more than pi, 
        % 2*pi is either added or substracted.
        if phaseAB > pi
-           phaseAB = mean(modulo(phaseB(:,i) - phaseA(:,i) -pi,2*pi));
+           phaseAB = mean(mod(phaseB(:,i) - phaseA(:,i) -pi,2*pi));
        elseif phaseAB < -pi
-           phaseAB = mean(modulo(phaseB(:,i) - phaseA(:,i) +pi,2*pi));
+           phaseAB = mean(mod(phaseB(:,i) - phaseA(:,i) +pi,2*pi));
        end
        if phaseAC > pi
-           phaseAC = mean(modulos(phaseC(:,i) - phaseA(:,i) -pi,2*pi));
+           phaseAC = mean(mod(phaseC(:,i) - phaseA(:,i) -pi,2*pi));
        elseif phaseAC < -pi
-           phaseAC = mean(modulos(phaseC(:,i) - phaseA(:,i) +pi,2*pi));
+           phaseAC = mean(mod(phaseC(:,i) - phaseA(:,i) +pi,2*pi));
        end
        if phaseBC > pi
-           phaseBC = mean(modulos(phaseC(:,i) - phaseB(:,i) -pi,2*pi));
+           phaseBC = mean(mod(phaseC(:,i) - phaseB(:,i) -pi,2*pi));
        elseif phaseBC < -pi
-           phaseBC = mean(modulos(phaseC(:,i) - phaseB(:,i) +pi,2*pi));
+           phaseBC = mean(mod(phaseC(:,i) - phaseB(:,i) +pi,2*pi));
        end
 
        % Time difference calculation
@@ -75,7 +75,6 @@ function thetaCRP = direction(mexfile, packet)
         thetaCRP = thetaCRP/(n-error);
     else
         disp('Error: No valid angles for this transmission')
-        thetaCRP = 100; % 100 not a valid output (not -90 to +90 deg), 
-                        % and can be checked for in the main file
+        thetaCRP = -1; % Indicates an error, as -1 is not a valid angle.
     end
 end
