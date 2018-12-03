@@ -76,6 +76,7 @@ function thetaCRP = direction(mexfile, packet)
     else
         disp('Error: No valid angles for this transmission')
         thetaCRP = -1; %Indicates an error (-1 is not a valid angle)
+        return
     end
     
     %Add 120 or 240 degrees depending on which antenna is closest to source

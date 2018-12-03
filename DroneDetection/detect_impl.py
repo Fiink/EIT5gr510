@@ -21,7 +21,7 @@ print("Activating WiFi Antennas")
 os.system("sudo ifconfig wlan0 up")
 time.sleep(1)
 print("Connecting to Specified WiFi Object")
-result = subprocess.check_output('sudo iw dev wlan0 connect -w AccessPoint',shell=True)
+result = subprocess.check_output('sudo iw dev wlan0 connect -w accesspoint',shell=True)
 print(result)
 time.sleep(2)
 x=0
