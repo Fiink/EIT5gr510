@@ -1,11 +1,18 @@
 %DIRECTION Determines direction from given MEX-file
+%{
+% FJERN SENERE
+%   'sample_data/csi.dat',1
+   mexfile = 'sample_data/csi.dat';
+   packet = 1;
+%}
 function thetaCRP = direction(mexfile, packet)
-    d_antenna = 0.06;   % Distance between antennas (|M1-M2|)
+    dAntenna = 0.06;    % Distance between antennas (|M1-M2|)
     f = 2.4E9;          % Signal frequency
     c = 299792458;
-    lf = c/f;  % Wavelength of signal (c/f)
+    lf = c/f;           % Wavelength of signal (c/f)
     thetaCRP = 0;       % Return value
-    error = 0;      % Amount of angle-calculations resulting in a complex value
+    dPhase = -1;
+    error = 0;          % Used for invalid angle-calculations
 
     %Add subfolder containing provided MATLAB-scripts from CSI-tool
     folder = fileparts(which(mfilename));
@@ -22,59 +29,65 @@ function thetaCRP = direction(mexfile, packet)
     
     %Determine size of arrays. phaseA is a 30xn array, where n
     %corresponds to the amount of transmitter-antennas.
-    [~,n] = size(phaseA);
+    [~,TXAntennas] = size(phaseA);
+    
+    %Determine which antenna is closest to signal source from permutation
+    %1 = antenna A, 2 = antenna B, 3 = antenna C
+    sourceAntenna = csi_trace{packet,1}.perm(1);
+    disp('Hit the following antenna first:')
+    disp(int2str(sourceAntenna));
     
     %Determine angle for each transmitter-signal
-    for i = 1:n
-       % Phase difference
-       phaseAB = mean(phaseB(:,i) - phaseA(:,i));
-       phaseBC = mean(phaseC(:,i) - phaseB(:,i));
-       phaseAC = mean(phaseC(:,i) - phaseA(:,i));
-       
-       % Change phase direction - If phase difference is more than pi, 
-       % 2*pi is either added or substracted.
-       if phaseAB > pi
-           phaseAB = mean(mod(phaseB(:,i) - phaseA(:,i) -pi,2*pi));
-       elseif phaseAB < -pi
-           phaseAB = mean(mod(phaseB(:,i) - phaseA(:,i) +pi,2*pi));
-       end
-       if phaseAC > pi
-           phaseAC = mean(mod(phaseC(:,i) - phaseA(:,i) -pi,2*pi));
-       elseif phaseAC < -pi
-           phaseAC = mean(mod(phaseC(:,i) - phaseA(:,i) +pi,2*pi));
-       end
-       if phaseBC > pi
-           phaseBC = mean(mod(phaseC(:,i) - phaseB(:,i) -pi,2*pi));
-       elseif phaseBC < -pi
-           phaseBC = mean(mod(phaseC(:,i) - phaseB(:,i) +pi,2*pi));
-       end
-
-       % Time difference calculation
-       tauAB = sign(phaseAB)*lf/2*(1-(pi-abs(phaseAB))/pi)/c;
-       tauAC = sign(phaseAC)*lf/2*(1-(pi-abs(phaseAC))/pi)/c;
-       tauBC = sign(phaseBC)*lf/2*(1-(pi-abs(phaseBC))/pi)/c;
-
-       % Angle calculation and conversion to degrees
-       thetaAB = asin((tauAB*c)/d_antenna)*180/pi;
-       thetaAC = asin((tauAC*c)/d_antenna)*180/pi;
-       thetaBC = asin((tauBC*c)/d_antenna)*180/pi;
-       
-       % Check for imaginary parts, indicating an error occured during
-       % logging
-       if imag(thetaAB) ~= 0 || imag(thetaAC) ~= 0 || imag(thetaBC) ~= 0
-           error = error + 1;
-           break;   % Stop current calculation
-       end
-       
-       %Calculate the CRP
-       thetaCRP = thetaCRP+(thetaAB+thetaAC-pi/3+thetaBC+pi/3)/3;
+    for i = 1:TXAntennas
+        if sourceAntenna == 3   %Compute angle from antenna pair BC
+            %Phase difference
+            dPhase = phaseC(:,i) - phaseA(:,i);
+        elseif sourceAntenna == 2 %Compute angle from antenna pair AC
+            %Phase difference
+            dPhase = phaseC(:,i) - phaseA(:,i);
+        elseif sourceAntenna == 1 %Compute angle from antenna pair AB
+            %Phase difference
+            dPhase = phaseC(:,i) - phaseB(:,i);
+        else
+            disp('Error: invalid perm');
+            thetaCRP = -1; %Indicates an error (-1 is not a valid angle)
+            return
+        end
+        %Change phase direction if phase difference is more than pi
+        if mean(dPhase) > pi
+            dPhase = mean(mod(dPhase - pi, 2*pi));
+        elseif mean(dPhase) < pi
+            dPhase = mean(mod(dPhase + pi, 2*pi));
+        end
+        
+        %Angle calculation and conversion to degrees
+        tau = sign(dPhase)*lf/2*(1-(pi-abs(dPhase))/pi)/c;
+        theta = asin((tau*c)/dAntenna)*180/pi;
+        
+        %Check for imaginary parts, indiciating an error during logging
+        %, else add to thetaCRP
+        if imag(theta) ~= 0
+            error = error + 1;
+        else
+            thetaCRP = thetaCRP + theta;
+        end
     end
     
-    % Take the average value of theteCRP for each transmitter-antenna
-    if (n-error) > 0
-        thetaCRP = thetaCRP/(n-error);
+    %Take average value of thetaCRP across the transmitter antennas:
+    if (TXAntennas-error) > 0
+        thetaCRP = thetaCRP/(TXAntennas-error);
     else
         disp('Error: No valid angles for this transmission')
-        thetaCRP = -1; % Indicates an error, as -1 is not a valid angle.
+        thetaCRP = -1; %Indicates an error (-1 is not a valid angle)
     end
+    
+    %Add 120 or 240 degrees depending on which antenna is closest to source
+    if sourceAntenna == 2
+        thetaCRP = thetaCRP + 120;
+    elseif sourceAntenna == 1
+        thetaCRP = thetaCRP + 240;
+    end
+    
+    %Take modulos_360 of thetaCRP, as it may still be negative degrees
+    thetaCRP = mod(thetaCRP,360);
 end
