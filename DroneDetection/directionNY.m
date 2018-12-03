@@ -11,7 +11,6 @@ function thetaCRP = direction(mexfile, packet)
     c = 299792458;
     lf = c/f;           % Wavelength of signal (c/f)
     thetaCRP = 0;       % Return value
-    dPhase = -1;
     error = 0;          % Used for invalid angle-calculations
 
     %Add subfolder containing provided MATLAB-scripts from CSI-tool
@@ -34,8 +33,6 @@ function thetaCRP = direction(mexfile, packet)
     %Determine which antenna is closest to signal source from permutation
     %1 = antenna A, 2 = antenna B, 3 = antenna C
     sourceAntenna = csi_trace{packet,1}.perm(1);
-    disp('Hit the following antenna first:')
-    disp(int2str(sourceAntenna));
     
     %Determine angle for each transmitter-signal
     for i = 1:TXAntennas
@@ -82,9 +79,9 @@ function thetaCRP = direction(mexfile, packet)
     end
     
     %Add 120 or 240 degrees depending on which antenna is closest to source
-    if sourceAntenna == 2
+    if sourceAntenna == 2       % Antenna B closest
         thetaCRP = thetaCRP + 120;
-    elseif sourceAntenna == 1
+    elseif sourceAntenna == 1   % Antenna A closest
         thetaCRP = thetaCRP + 240;
     end
     
