@@ -18,11 +18,11 @@ function ret = direction(mexfile, packet)
     folder = fileparts(which(mfilename));
     addpath(genpath(folder));
 
-    %Load CSI trace packet and convert to absolute unit
+    %Load CSI trace packet and convert to absolute units
     csi_trace = read_bf_file(mexfile);
     csi = get_scaled_csi(csi_trace{packet});
     
-    %Compute median phase for antenna-pairs
+    %Compute phase for antenna-pairs
     phaseA = unwrap(angle(squeeze(csi(:,1,:)).')); 
     phaseB = unwrap(angle(squeeze(csi(:,2,:)).'));
     phaseC = unwrap(angle(squeeze(csi(:,3,:)).'));
@@ -85,7 +85,7 @@ function ret = direction(mexfile, packet)
         theta = asin((tau*c)/dAntenna)*180/pi;
         
         %Check for imaginary parts, indiciating an error during logging
-        %, else add to thetaCRP
+        %, else add to ret
         if imag(theta) ~= 0
             error = error + 1;
         else
@@ -93,7 +93,7 @@ function ret = direction(mexfile, packet)
         end
     end
     
-    %Take average value of thetaCRP across the transmitter antennas:
+    %Take average value of ret across the transmitter antennas:
     if TXAntennas ~= error
         ret = ret/(TXAntennas-error);
     else
@@ -102,13 +102,11 @@ function ret = direction(mexfile, packet)
         return
     end
     
-    %Add 120 or 240 degrees depending on which antenna is closest to source
-    if sourceAntenna == 2       % Antenna B closest
-        ret = ret + 120;
+    if sourceAntenna == 3       % Antenna C closest
+        ret = mod(ret, 360);        % Take mod_360, as ret may be -90 to 0
+    elseif sourceAntenna == 2   % Antenna B closest
+        ret = ret + 120;            % Shift by 120 degrees
     elseif sourceAntenna == 1   % Antenna A closest
-        ret = ret + 240;
+        ret = ret + 240;            % Shift by 240 degrees
     end
-    
-    %Take modulos_360 of thetaCRP, as it may still be negative degrees
-    ret = mod(ret,360);
 end
