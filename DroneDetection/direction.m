@@ -22,7 +22,7 @@ function ret = direction(mexfile, packet)
     csi_trace = read_bf_file(mexfile);
     csi = get_scaled_csi(csi_trace{packet});
     
-    %Compute phase for antenna-pairs
+    %Compute phase for antennas
     phaseA = unwrap(angle(squeeze(csi(:,1,:)).')); 
     phaseB = unwrap(angle(squeeze(csi(:,2,:)).'));
     phaseC = unwrap(angle(squeeze(csi(:,3,:)).'));
