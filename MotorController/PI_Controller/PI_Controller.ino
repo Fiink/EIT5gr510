@@ -11,26 +11,42 @@ void setup() {
   ki = 1; // I-constant, set to 0 to disable
   integral = 0;
 
+  pinMode(3, OUTPUT); // Digital pin 3 (Clockwise)
+  pinMode(5, OUTPUT); // Digital pin 5 (Counter-clockwise)
+  analogWrite(3, 0);
+  analogWrite(5, 0);
+  
   // Lav noget kode som venter på et input fra serial (= Fra computeren)
 }
 
 void loop() {
-  readEncoder();
   setSpeed();
 }
 
 void readEncoder() {
   // Read rotary encoder
   current = 1.0;
-
 }
-void fwd(){
-    
-  }
+void cw(int pwm) {
+  // Convert to 0-255 resolution
+  // <magic>
+
+  analogWrite(5, 0);  // Turn off counter-clockwise signal
+  analogWrite(3, pwm); // Turn on clockwise signal
+}
+
+void ccw(int pwm) {
+  // Convert to 0-255 resolution
+  // <magic>
+
+  analogWrite(3, 0);  // Turn off clockwise signal
+  analogWrite(5, pwm); // Turn on counter-clockwise signal
+}
 void setSpeed() {
   bool inv, neg;
-  
+
   //Determine error
+  readEncoder();
   error = target - current;
 
   // If error loops around 360
@@ -82,25 +98,25 @@ void setSpeed() {
   // Set output
   switch (neg) {
     case 0: // Positive error
-    break;
-    switch (inv){
-      case 0: // Don't invert
-        fwd(error);
-        break;
-      case 1: // Invert
-        bwd(error);
-        break;
+      break;
+      switch (inv) {
+        case 0: // Don't invert
+          cw(speed);
+          break;
+        case 1: // Invert
+          ccw(speed);
+          break;
       }
     case 1: // Negative error
-    switch (inv){
-      case 0: // Don't re-invert
-        bwd(error);
-        break;
-      case 1: // Re-invert
-        fwd(error);
-        break;
+      switch (inv) {
+        case 0: // Don't re-invert
+          ccw(speed);
+          break;
+        case 1: // Re-invert
+          cw(speed);
+          break;
       }
-    }
+  }
 
 }
 
