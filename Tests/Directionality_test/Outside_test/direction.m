@@ -1,4 +1,4 @@
-file = 'CSI-filer/60nr5.dat';
+file = 'CSI-filer/60nr2.dat';
 
 
 dPhaseAvg = 0;
