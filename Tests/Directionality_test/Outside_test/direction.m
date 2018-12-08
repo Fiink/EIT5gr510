@@ -3,6 +3,10 @@ file = 'CSI-filer/60nr2.dat';
 
 dPhaseAvg = 0;
 
+
+
+
+
 dAntenna = 0.06;    % Distance between antennas (|M1-M2|)
 f = 2.4E9;          % Signal frequency
 c = 299792458;      % Speed of light
