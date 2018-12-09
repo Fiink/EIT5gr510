@@ -7,12 +7,12 @@
     mexfile = '/csi.dat'
 %}
 function ret = direction(mexfile, packet)
-    dAntenna = 0.06;    % Distance between antennas (|M1-M2|)
-    f = 2.4E9;          % Signal frequency
-    c = 299792458;      % Speed of light
-    lf = c/f;           % Wavelength of signal
+%     dAntenna = 0.06;    % Distance between antennas (|M1-M2|)
+%     f = 2.4E9;          % Signal frequency
+%     c = 299792458;      % Speed of light
+%     lf = c/f;           % Wavelength of signal
     ret = 0;            % Return value
-    error = 0;          % Used for invalid angle-calculations
+%     error = 0;          % Used for invalid angle-calculations
 
     %Add subfolder containing provided MATLAB-scripts from CSI-tool
     folder = fileparts(which(mfilename));
@@ -51,57 +51,23 @@ function ret = direction(mexfile, packet)
         end
         
         %Change phase direction if phase difference is more than pi
-%         if mean(dPhase) > pi  
-%             dPhase = mean(mod(dPhase - pi, 2*pi));
-%             % Will always be the same as '= mean(dPhase - pi)', as we 
-%             % never have a difference higher than 2*pi
-%         elseif mean(dPhase) < -pi
-%             %dPhase = mean(mod(dPhase + pi, 2*pi)-pi);
-%             dPhase = mean(mod(dPhase,2*pi));
-%             
-%             % dPhase = mean(mod(dPhase + pi, 2*pi));
-%             % Would always equal some value around +pi to +2pi, because the
-%             % following happens when we do this calculation:
-%             %
-%             % The value of dPhase in this case must be in the area -pi to
-%             % -2pi.
-%             % First, we add pi to it, moving dPhase to the area 0 to -pi.
-%             % Then, we take mod_(2*pi). This will always result in a phase
-%             % difference in the area +pi to +2pi, which is still invalid to
-%             % us. 
-%         else
-%             dPhase = mean(dPhase);
-%         end
-        if mean(dPhase) > pi
+        if mean(dPhase) > 0.96*pi
             dPhase = mean(dPhase - 2*pi);
-        elseif mean(dPhase) < -pi
+        elseif mean(dPhase) < -0.96*pi
             dPhase = mean(dPhase + 2*pi);
         else
             dPhase = mean(dPhase);
         end
 
-        %Angle calculation and conversion to degrees
-        tau = sign(dPhase)*(lf/2)*(1-((pi-abs(dPhase))/pi))/c;
-        theta = asin((tau*c)/dAntenna)*180/pi;
+        %Angle calculation (and conversion from radians to degrees)
+        theta = 29.84*dPhase;
         
-        %Check for imaginary parts, indiciating an error during logging
-        %, else add to ret
-        if imag(theta) ~= 0
-            error = error + 1;
-        else
-            ret = ret + theta;
-        end
+        ret = ret + theta;
     end
     
     %Take average value of ret across the transmitter antennas:
-    if TXAntennas ~= error
-        ret = ret/(TXAntennas-error);
-    else
-        disp('Error: No valid angles for this transmission')
-        ret = -1; %Indicates an error (-1 is not a valid angle)
-        return
-    end
-    
+    ret = ret/TXAntennas;
+        
     if sourceAntenna == 3       % Antenna C closest
         ret = mod(ret, 360);        % Take mod_360, as ret may be -90 to 0
     elseif sourceAntenna == 2   % Antenna B closest

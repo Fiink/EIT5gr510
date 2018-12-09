@@ -1,4 +1,4 @@
-file = 'CSI-filer/60nr2.dat';
+file = 'CSI-filer/60nr4.dat';
 
 
 dPhaseAvg = 0;
@@ -64,32 +64,15 @@ for i = 1:TXAntennas
 %     end
 
     %Change phase direction if phase difference is more than pi
-%         if mean(dPhase) > pi  
-%             dPhase = mean(mod(dPhase - pi, 2*pi));
-%             % Will always be the same as '= mean(dPhase - pi)', as we 
-%             % never have a difference higher than 2*pi
-%         elseif mean(dPhase) < -pi
-%             %dPhase = mean(mod(dPhase + pi, 2*pi)-pi);
-%             dPhase = mean(mod(dPhase,2*pi));
-%             
-%             % dPhase = mean(mod(dPhase + pi, 2*pi));
-%             % Would always equal some value around +pi to +2pi, because the
-%             % following happens when we do this calculation:
-%             %
-%             % The value of dPhase in this case must be in the area -pi to
-%             % -2pi.
-%             % First, we add pi to it, moving dPhase to the area 0 to -pi.
-%             % Then, we take mod_(2*pi). This will always result in a phase
-%             % difference in the area +pi to +2pi, which is still invalid to
-%             % us. 
-%         else
-%             dPhase = mean(dPhase);
-%         end
-    if mean(dPhase) > pi
+    if mean(dPhase) > 0.96*pi
             disp('#### FASE OVER PI');
+            X = num2str(mean(dPhase));
+            disp(X);
         dPhase = mean(dPhase - 2*pi);
-    elseif mean(dPhase) < -pi
+    elseif mean(dPhase) < -0.96*pi
             disp('#### FASE UNDER PI');
+            X = num2str(mean(dPhase));
+            disp(X);
         dPhase = mean(dPhase + 2*pi);
     else
         dPhase = mean(dPhase);
@@ -101,7 +84,8 @@ for i = 1:TXAntennas
     
     %Angle calculation and conversion to degrees
     tau = sign(dPhase)*(lf/2)*(1-((pi-abs(dPhase))/pi))/c;
-    theta = asin((tau*c)/dAntenna)*180/pi;
+    thetaGammel = asin((tau*c)/dAntenna)*180/pi;
+    theta = 29.84*dPhase;
 
     %Check for imaginary parts, indiciating an error during logging
     %, else add to ret
@@ -134,7 +118,9 @@ end
 % end
 
 disp(' ');
-X = ['Endelig faseforskeL: ',num2str(dPhaseAvg)];
+X = ['Endelig faseforskel: ',num2str(dPhaseAvg)];
+disp(X);
+X = ['Gammel vinkel:  ',num2str(thetaGammel/(TXAntennas-error))];
 disp(X);
 X = ['Endelig vinkel: ',num2str(ret)];
 disp(X);
