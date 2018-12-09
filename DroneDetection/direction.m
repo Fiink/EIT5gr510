@@ -65,7 +65,7 @@ function ret = direction(mexfile, packet)
         ret = ret + theta;
     end
     
-    %Take average value of ret across the transmitter antennas:
+    %Calculate average value of ret across all iterations:
     ret = ret/TXAntennas;
         
     if sourceAntenna == 3       % Antenna C closest
