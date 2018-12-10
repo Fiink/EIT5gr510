@@ -45,7 +45,8 @@ void PinB(){
 //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 #include<math.h>
-
+#define pinPos 7
+#define pinNeg 5
 int kp, ki, integral, proportional, speed;
 float target, error;
 float current=0;
@@ -57,10 +58,10 @@ void setup() {
 
   Serial.begin(9600);
 
-  pinMode(3, OUTPUT); // Digital pin 3 (Clockwise)
-  pinMode(5, OUTPUT); // Digital pin 5 (Counter-clockwise)
-  analogWrite(3, 0);
-  analogWrite(5, 0);
+  pinMode(pinPos, OUTPUT); // Digital pin 3 (Clockwise)
+  pinMode(pinNeg, OUTPUT); // Digital pin 5 (Counter-clockwise)
+  analogWrite(pinPos, 0);
+  analogWrite(pinNeg, 0);
   
   //Rotary Encoder Setup Enviroment>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   
@@ -68,7 +69,6 @@ void setup() {
   pinMode(pinB, INPUT_PULLUP); // set pinB as an input, pulled HIGH to the logic voltage (5V or 3.3V for most cases)
   attachInterrupt(0,PinA,RISING); // set an interrupt on PinA, looking for a rising edge signal and executing the "PinA" Interrupt Service Routine (below)
   attachInterrupt(1,PinB,RISING); // set an interrupt on PinB, looking for a rising edge signal and executing the "PinB" Interrupt Service Routine (below)
-  Serial.begin(115200); // start the serial monitor link
   step_grade=(360)/(PM_gear*ME_gear*steps);
   
   //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -87,14 +87,21 @@ void readEncoder() {
     Serial.println(encoderPos);
     oldEncPos = encoderPos;
   }
+  if (oldEncPos >= 359.5){
+    oldEncPos = 0;
+  }
   current = oldEncPos; //tranfer the position to the float "current".
 }
 
 void loop() {
   waitingForSignal();
+  Serial.println("Signal Recieved");
+  Serial. println(target);
+  readEncoder();
   setSpeed();
   while (error > 1 ) {
-  setSpeed();
+    readEncoder();
+    setSpeed();
   }
 }
 
@@ -177,14 +184,14 @@ void cw(int pwm) {
   // Convert to 0-255 resolution
   // <magic>
 
-  analogWrite(5, 0);  // Turn off counter-clockwise signal
-  analogWrite(3, pwm); // Turn on clockwise signal
+  analogWrite(pinNeg, 0);  // Turn off counter-clockwise signal
+  analogWrite(pinPos, pwm); // Turn on clockwise signal
 }
 
 void ccw(int pwm) {
   // Convert to 0-255 resolution
   // <magic>
 
-  analogWrite(3, 0);  // Turn off clockwise signal
-  analogWrite(5, pwm); // Turn on counter-clockwise signal
+  analogWrite(pinPos, 0);  // Turn off clockwise signal
+  analogWrite(pinNeg, pwm); // Turn on counter-clockwise signal
 }
