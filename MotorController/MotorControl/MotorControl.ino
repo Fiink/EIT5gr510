@@ -1,7 +1,3 @@
-//Rotary Encoder Enviroment>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-/*******Interrupt-based Rotary Encoder Sketch*******
-by Simon Merrett, based on insight from Oleg Mazurov, Nick Gammon, rt, Steve Spence
-*/
 #define PM_gear 9
 #define ME_gear 3.33333
 #define steps 24
