@@ -1,5 +1,5 @@
 clear;
-file = 'CSI-filer/60nr5.dat';
+file = 'CSI-filer/-60nr1.dat';
 
 
 dPhaseAvg = 0;
@@ -87,7 +87,7 @@ for i = 1:TXAntennas
         disp(X);    
     if mean(dPhase) > pi
             disp('#### FASE OVER PI');
-        dPhase = mean(dPhase - 2*pi);
+        dPhase = mean(2*pi - dPhase);
         X = ['Fixed fase => ',num2str(dPhase)];
         disp(X);
     elseif mean(dPhase) < -pi
