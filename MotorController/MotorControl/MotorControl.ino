@@ -44,10 +44,9 @@ void PinB(){
 #include<math.h>
 #define pinPos 5
 #define pinNeg 9
-int kp, ki, integral, proportional, speed;
+int kp, ki, integral, proportional, speed, x = 1, turn=0;
 float target, error;
 float current=0;
-int x = 1;
 
 void setup() {
   kp = 1; // P-constant, set to 1 to disable
@@ -75,6 +74,7 @@ void setup() {
   
 }
 char t;
+int timestart=0;
 void waitingForSignal() {
   // Kode som venter på et input fra serial (= Fra computeren)pinBpinB
   while (Serial.available()) {
@@ -83,9 +83,11 @@ void waitingForSignal() {
   Serial.flush();
   while (Serial.available() == 0) {}
   target = Serial.parseFloat();
-  Serial.println("Signal Recieved");
-  Serial.print("Target: ");
-  Serial.println(target);
+  timestart=millis();
+  Serial.println(timestart);
+//  Serial.println("Signal Recieved");
+//  Serial.print("Target: ");
+//  Serial.println(target);
 }
 
 
@@ -96,7 +98,6 @@ void readEncoder() {
     current = encoderPos; //tranfer the position to the float "current".
   }
 }
-int turn=0;
 void loop() {
   turn=0;
   while (x == 1) {
@@ -106,7 +107,7 @@ void loop() {
   waitingForSignal();
   setSpeed();
   while (abs(error) > 0.5 || turn < 5.0) {
-    Serial.println(turn);
+//    Serial.println(turn);
       if(oldEncPos == encoderPos) {
       turn=turn+1;
       }
@@ -117,8 +118,12 @@ void loop() {
     //Serial.print("Error: ");
     //Serial.println(error);
   }
+  Serial.print("it took: ");
+  Serial.print(((float)millis()-(float)timestart)/1000);
+  Serial.println("seconds to parse");
+  Serial.println(millis());
   integral = 0;
-  Serial.println(encoderPos);
+  //Serial.println(encoderPos);
   speed = 0;
   cw(speed);
   Serial.flush();
@@ -132,7 +137,7 @@ void setSpeed() {
 
   //Determine error
   error = target - current;
-  Serial.print("Error: "); Serial.println(error);
+//  Serial.print("Error: "); Serial.println(error);
 /*
   // If error loops around 360 | This is only possible, if target is bigger than 360 degrees, in this case it would be a problem with the matlab script.
   if (error > 360) {
@@ -185,11 +190,11 @@ void setSpeed() {
       switch (inv) {
         case 0: // Don't invert
           cw(speed);
-          Serial.println("00");
+//          Serial.println("00");
           break;
         case 1: // Invert
           ccw(speed);
-          Serial.println("01");
+//          Serial.println("01");
           break;
       }
       break;
@@ -197,18 +202,18 @@ void setSpeed() {
       switch (inv) {
         case 0: // Don't re-invert
           ccw(speed);
-          Serial.println("10");
-          Serial.println(inv);
-          Serial.println(neg);
+//          Serial.println("10");
+//          Serial.println(inv);
+//          Serial.println(neg);
           break;
         case 1: // Re-invert
           cw(speed);
-          Serial.println("11");
+//          Serial.println("11");
           break;
       }
       break;
   }
-  Serial.println("case done");
+//  Serial.println("case done");
 }
 
 void ccw(int pwm) {
