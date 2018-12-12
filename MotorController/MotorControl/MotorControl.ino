@@ -96,15 +96,22 @@ void readEncoder() {
     current = encoderPos; //tranfer the position to the float "current".
   }
 }
-
+int turn=0;
 void loop() {
+  turn=0;
   while (x == 1) {
     readEncoder();
     x++;  
   }
   waitingForSignal();
   setSpeed();
-  while (abs(error) > 0.5) {
+  while (abs(error) > 0.5 & turn>5) {
+      if(oldEncPos == encoderPos) {
+      turn=turn+1;
+      }
+      if(oldEncPos != encoderPos) {
+      turn=0;
+      }
     setSpeed();
     //Serial.print("Error: ");
     //Serial.println(error);
