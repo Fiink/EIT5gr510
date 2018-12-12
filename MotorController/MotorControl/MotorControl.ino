@@ -16,26 +16,26 @@ volatile int reading = 0; //somewhere to store the direct values we read from ou
 void PinA(){
   cli(); //stop interrupts happening before we read pin values
   reading = PIND & 0xC; // read all eight pin values then strip away all but pinA and pinB's values
-  if(reading == B1100 && aFlag) { //check that we have both pins at detent (HIGH) and that we are expecting detent on this pin's rising edge
-    encoderPos =encoderPos - step_grade; //decrement the encoder's position count
-    if(encoderPos<0.0)encoderPos=359.0+step_grade;
+  if(reading == B00001100 && aFlag) { //check that we have both pins at detent (HIGH) and that we are expecting detent on this pin's rising edge
+    encoderPos = encoderPos - step_grade; //decrement the encoder's position count
+    if (encoderPos < 0.0) encoderPos = 359.0 + step_grade;
     bFlag = 0; //reset flags for the next turn
     aFlag = 0; //reset flags for the next turn
   }
-  else if (reading == B01000) bFlag = 1; //signal that we're expecting pinB to signal the transition to detent from free rotation
+  else if (reading == B00000100) bFlag = 1; //signal that we're expecting pinB to signal the transition to detent from free rotation
   sei(); //restart interrupts
 }
 
 void PinB(){
   cli(); //stop interrupts happening before we read pin values
   reading = PIND & 0xC; //read all eight pin values then strip away all but pinA and pinB's values
-  if (reading == B1100 && bFlag) { //check that we have both pins at detent (HIGH) and that we are expecting detent on this pin's rising edge
-    encoderPos=encoderPos+step_grade; //increment the encoder's position count
-    if(encoderPos>359.0+step_grade)encoderPos=0.0;
+  if (reading == B00001100 && bFlag) { //check that we have both pins at detent (HIGH) and that we are expecting detent on this pin's rising edge
+    encoderPos = encoderPos + step_grade; //increment the encoder's position count
+    if (encoderPos > 359.0 + step_grade) encoderPos = 0.0;
     bFlag = 0; //reset flags for the next turn
     aFlag = 0; //reset flags for the next turn
   }
-  else if (reading == B01000) aFlag = 1; //signal that we're expecting pinA to signal the transition to detent from free rotation
+  else if (reading == B00001000) aFlag = 1; //signal that we're expecting pinA to signal the transition to detent from free rotation
   sei(); //restart interrupts
 }
 
@@ -47,13 +47,16 @@ void PinB(){
 int kp, ki, integral, proportional, speed;
 float target, error;
 float current=0;
+int x = 1;
 
 void setup() {
   kp = 1; // P-constant, set to 1 to disable
   ki = 1; // I-constant, set to 0 to disable
   integral = 0;
+  cw(0);
+  ccw(0);
 
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   pinMode(pinPos, OUTPUT); // Digital pin 3 (Clockwise)
   pinMode(pinNeg, OUTPUT); // Digital pin 5 (Counter-clockwise)
@@ -64,16 +67,19 @@ void setup() {
   
   pinMode(pinA, INPUT_PULLUP); // set pinA as an input, pulled HIGH to the logic voltage (5V or 3.3V for most cases)
   pinMode(pinB, INPUT_PULLUP); // set pinB as an input, pulled HIGH to the logic voltage (5V or 3.3V for most cases)
-  attachInterrupt(0,PinA,RISING); // set an interrupt on PinA, looking for a rising edge signal and executing the "PinA" Interrupt Service Routine (below)
-  attachInterrupt(1,PinB,RISING); // set an interrupt on PinB, looking for a rising edge signal and executing the "PinB" Interrupt Service Routine (below)
+  attachInterrupt(digitalPinToInterrupt(2),PinA,RISING); // set an interrupt on PinA, looking for a rising edge signal and executing the "PinA" Interrupt Service Routine (below)
+  attachInterrupt(digitalPinToInterrupt(3),PinB,RISING); // set an interrupt on PinB, looking for a rising edge signal and executing the "PinB" Interrupt Service Routine (below)
   step_grade=(360)/(PM_gear*ME_gear*steps);
   
   //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   
 }
-
+char t;
 void waitingForSignal() {
   // Kode som venter på et input fra serial (= Fra computeren)pinBpinB
+  while (Serial.available()) {
+    t = Serial.read();
+  }
   Serial.flush();
   while (Serial.available() == 0) {}
   target = Serial.parseFloat();
@@ -85,19 +91,29 @@ void waitingForSignal() {
 
 void readEncoder() {
   if(oldEncPos != encoderPos) { //number between 0 and 359.5
-    Serial.println(encoderPos);
+    //Serial.println(encoderPos);
     oldEncPos = encoderPos;
+    current = encoderPos; //tranfer the position to the float "current".
   }
-  current = encoderPos; //tranfer the position to the float "current".
 }
 
 void loop() {
-  readEncoder();
-  /*waitingForSignal();
+  while (x == 1) {
+    readEncoder();
+    x++;  
+  }
+  waitingForSignal();
   setSpeed();
-  while (error > 1) {
+  while (error > 1.0) {
     setSpeed();
-  }*/
+    //Serial.print("Error: ");
+    //Serial.println(error);
+  }
+  Serial.println(encoderPos);
+  speed = 0;
+  cw(speed);
+  Serial.flush();
+  delay(1000);
 }
 
 
@@ -115,9 +131,9 @@ void setSpeed() {
 */
 
   // Determine direction
-  if (abs(error) > 180) { // Invert direction
+  if (abs(error) > 180.0) { // Invert direction
     inv = 1;
-    if (error < 0) {  // Direction is already inverted
+    if (error < 0.0) {  // Direction is already inverted
       neg = 1;
     }
     else {  // Direction not previously inverted
@@ -127,7 +143,7 @@ void setSpeed() {
   }
   else {  //No inversion
     inv = 0;
-    if (error < 0) {  // Drection is already inverted
+    if (error < 0.0) {  // Drection is already inverted
       neg = 1;
     }
     else {  // Direction not previously inverted
@@ -158,10 +174,10 @@ void setSpeed() {
     case 0: // Positive error
       switch (inv) {
         case 0: // Don't invert
-          cw(speed);
+          ccw(speed);
           break;
         case 1: // Invert
-          ccw(speed);
+          cw(speed);
           break;
       }
     case 1: // Negative error
@@ -174,23 +190,22 @@ void setSpeed() {
           break;
       }
   }
-  delay(1000);
-}
-
-void cw(int pwm) {
-  // Convert to 0-255 resolution
-  // <magic>
-
-  analogWrite(pinNeg, 0);  // Turn off counter-clockwise signal
-  analogWrite(pinPos, pwm); // Turn on clockwise signal
-  Serial.println("cw");
 }
 
 void ccw(int pwm) {
   // Convert to 0-255 resolution
   // <magic>
 
+  analogWrite(pinNeg, 0);  // Turn off counter-clockwise signal
+  analogWrite(pinPos, pwm); // Turn on clockwise signal
+  //Serial.println("cw");
+}
+
+void cw(int pwm) {
+  // Convert to 0-255 resolution
+  // <magic>
+
   analogWrite(pinPos, 0);  // Turn off clockwise signal
   analogWrite(pinNeg, pwm); // Turn on counter-clockwise signal
-  Serial.println("ccw");
+  //Serial.println("ccw");
 }
