@@ -50,7 +50,7 @@ float current=0;
 int x = 1;
 
 void setup() {
-  kp = 1; // P-constant, set to 1 to disable
+  kp = 10; // P-constant, set to 1 to disable
   ki = 1; // I-constant, set to 0 to disable
   integral = 0;
   cw(0);
@@ -104,11 +104,12 @@ void loop() {
   }
   waitingForSignal();
   setSpeed();
-  while (error > 1.0) {
+  while (abs(error) > 0.5) {
     setSpeed();
     //Serial.print("Error: ");
     //Serial.println(error);
   }
+  integral = 0;
   Serial.println(encoderPos);
   speed = 0;
   cw(speed);
@@ -123,6 +124,7 @@ void setSpeed() {
 
   //Determine error
   error = target - current;
+  Serial.print("Error: "); Serial.println(error);
 /*
   // If error loops around 360 | This is only possible, if target is bigger than 360 degrees, in this case it would be a problem with the matlab script.
   if (error > 360) {
@@ -139,7 +141,7 @@ void setSpeed() {
     else {  // Direction not previously inverted
       neg = 0;
     }
-    error = 359.5 -abs(error);
+    //error = 359.5 -abs(error);
   }
   else {  //No inversion
     inv = 0;
@@ -174,22 +176,31 @@ void setSpeed() {
     case 0: // Positive error
       switch (inv) {
         case 0: // Don't invert
-          ccw(speed);
+          cw(speed);
+          Serial.println("00");
           break;
         case 1: // Invert
-          cw(speed);
+          ccw(speed);
+          Serial.println("01");
           break;
       }
+      break;
     case 1: // Negative error
       switch (inv) {
         case 0: // Don't re-invert
-          cw(speed);
+          ccw(speed);
+          Serial.println("10");
+          Serial.println(inv);
+          Serial.println(neg);
           break;
         case 1: // Re-invert
-          ccw(speed);
+          cw(speed);
+          Serial.println("11");
           break;
       }
+      break;
   }
+  Serial.println("case done");
 }
 
 void ccw(int pwm) {
