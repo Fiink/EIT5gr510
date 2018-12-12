@@ -50,7 +50,7 @@ float current=0;
 int x = 1;
 
 void setup() {
-  kp = 10; // P-constant, set to 1 to disable
+  kp = 1; // P-constant, set to 1 to disable
   ki = 1; // I-constant, set to 0 to disable
   integral = 0;
   cw(0);
@@ -105,7 +105,8 @@ void loop() {
   }
   waitingForSignal();
   setSpeed();
-  while (abs(error) > 0.5 & turn>5) {
+  while (abs(error) > 0.5 || turn < 5.0) {
+    Serial.println(turn);
       if(oldEncPos == encoderPos) {
       turn=turn+1;
       }
