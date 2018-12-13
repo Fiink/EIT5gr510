@@ -1,80 +1,79 @@
-//Rotary Encoder Enviroment>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//Define gearing for the motor system
 #define PM_gear 9
 #define ME_gear 3.33333
 #define steps 24
 float step_grade;
 
+static int pinA = 2;          //Interupt 0
+static int pinB = 3;          //Interupt 1
+volatile byte aFlag = 0;      // determin
+volatile byte bFlag = 0;      // Check if pin is high
+volatile float encoderPos = 0;//position of the encoder real time
+volatile float oldEncPos = 0; //stores the last encoder position
+volatile int reading = 0;     //what is read from the pins
 
-static int pinA = 2; // Our first hardware interrupt pin is digital pin 2
-static int pinB = 3; // Our second hardware interrupt pin is digital pin 3
-volatile byte aFlag = 0; // let's us know when we're expecting a rising edge on pinA to signal that the encoder has arrived at a detent
-volatile byte bFlag = 0; // let's us know when we're expecting a rising edge on pinB to signal that the encoder has arrived at a detent (opposite direction to when aFlag is set)
-volatile float encoderPos = 0; //this variable stores our current value of encoder position. Change to int or uin16_t instead of byte if you want to record a larger range than 0-255
-volatile float oldEncPos = 0; //stores the last encoder position value so we can compare to the current reading and see if it has changed (so we know when to print to the serial monitor)
-volatile int reading = 0; //somewhere to store the direct values we read from our interrupt pins before checking to see if we have moved a whole detent
 
+//define what happens upon interupt
 void PinA(){
-  cli(); //stop interrupts happening before we read pin values
-  reading = PIND & 0xC; // read all eight pin values then strip away all but pinA and pinB's values
-  if(reading == B00001100 && aFlag) { //check that we have both pins at detent (HIGH) and that we are expecting detent on this pin's rising edge
-    encoderPos = encoderPos - step_grade; //decrement the encoder's position count
+  cli(); //stop interrupts
+  reading = PIND & 0xC; //read the value B00001100 (pin 2 and 3)
+  if(reading == B00001100 && aFlag) { //if other pin was high first
+    encoderPos = encoderPos - step_grade; //decrement the enc.position
     if (encoderPos < 0.0) encoderPos = 359.0 + step_grade;
     bFlag = 0; //reset flags for the next turn
     aFlag = 0; //reset flags for the next turn
   }
-  else if (reading == B00000100) bFlag = 1; //signal that we're expecting pinB to signal the transition to detent from free rotation
-  sei(); //restart interrupts
+  else if (reading == B00000100) bFlag = 1; //if A is first pin high
+  sei(); //enables interupts
 }
 
-void PinB(){
-  cli(); //stop interrupts happening before we read pin values
-  reading = PIND & 0xC; //read all eight pin values then strip away all but pinA and pinB's values
-  if (reading == B00001100 && bFlag) { //check that we have both pins at detent (HIGH) and that we are expecting detent on this pin's rising edge
-    encoderPos = encoderPos + step_grade; //increment the encoder's position count
+void PinB(){ //same principle for the second pin
+  cli(); 
+  reading = PIND & 0xC; 
+  if (reading == B00001100 && bFlag) { 
+    encoderPos = encoderPos + step_grade;
     if (encoderPos > 359.0 + step_grade) encoderPos = 0.0;
-    bFlag = 0; //reset flags for the next turn
-    aFlag = 0; //reset flags for the next turn
+    bFlag = 0; 
+    aFlag = 0; 
   }
-  else if (reading == B00001000) aFlag = 1; //signal that we're expecting pinA to signal the transition to detent from free rotation
-  sei(); //restart interrupts
+  else if (reading == B00001000) aFlag = 1; 
+  sei();
 }
 
-//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
+//initialize controller code and load libraries
 #include<math.h>
-#define pinPos 5
-#define pinNeg 9
+#define pinPos 5 //positive pwm signal pin
+#define pinNeg 9 //negative pwm signal pin
 int kp, ki, integral, proportional, speed, x = 1, turn=0;
 float target, error;
 float current=0;
 
 void setup() {
-  kp = 1; // P-constant, set to 1 to disable
-  ki = 1; // I-constant, set to 0 to disable
-  integral = 0;
-  cw(0);
-  ccw(0);
-
+  //make PI controller:
+  kp = 1; //p-constant
+  ki = 1; //i-contant
+  integral = 0; //reset the integral to be zero
+  cw(0);  //stop any motor activity clockwise
+  ccw(0); //stop any motor activity counter clockwise
   Serial.begin(115200);
-
   pinMode(pinPos, OUTPUT); // Digital pin 3 (Clockwise)
   pinMode(pinNeg, OUTPUT); // Digital pin 5 (Counter-clockwise)
   analogWrite(pinPos, 0);
   analogWrite(pinNeg, 0);
-  
-  //Rotary Encoder Setup Enviroment>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-  
-  pinMode(pinA, INPUT_PULLUP); // set pinA as an input, pulled HIGH to the logic voltage (5V or 3.3V for most cases)
-  pinMode(pinB, INPUT_PULLUP); // set pinB as an input, pulled HIGH to the logic voltage (5V or 3.3V for most cases)
-  attachInterrupt(digitalPinToInterrupt(2),PinA,RISING); // set an interrupt on PinA, looking for a rising edge signal and executing the "PinA" Interrupt Service Routine (below)
-  attachInterrupt(digitalPinToInterrupt(3),PinB,RISING); // set an interrupt on PinB, looking for a rising edge signal and executing the "PinB" Interrupt Service Routine (below)
+
+//Rotary Encoder Setup Enviroment>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  pinMode(pinA, INPUT_PULLUP); // set pinA as an input
+  pinMode(pinB, INPUT_PULLUP); // set pinB as an input
+  attachInterrupt(digitalPinToInterrupt(2),PinA,RISING);//interrupt on PinA
+  attachInterrupt(digitalPinToInterrupt(3),PinB,RISING);//interrupt on PinB
   step_grade=(360)/(PM_gear*ME_gear*steps);
   
-  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   
 }
 char t;
 int timestart=0;
+
 void waitingForSignal() {
   while (Serial.available()) {
     t = Serial.read();
@@ -82,48 +81,47 @@ void waitingForSignal() {
   Serial.flush();
   while (Serial.available() == 0) {}
   target = Serial.parseFloat();
-  timestart=millis();
-  Serial.println(timestart);
 }
 
 
 void readEncoder() {
   if(oldEncPos != encoderPos) { //number between 0 and 359.5
-    //Serial.println(encoderPos);
     oldEncPos = encoderPos;
     current = encoderPos; //tranfer the position to the float "current".
   }
 }
 void loop() {
-  turn=0;
+  turn=0; //if we have stable readings in a row turn will increment
   while (x == 1) {
-    readEncoder();
+    readEncoder(); //read initial encoder position
     x++;  
   }
-  waitingForSignal();
-  setSpeed();
+  waitingForSignal(); //wait for input from computer with angle
+  setSpeed();         //set speed of motor based on the error
   while (abs(error) > 0.5 || turn < 5.0) {
       if(oldEncPos == encoderPos) {
-      turn=turn+1;
+      turn=turn+1; //stable reading, increment count
       }
       if(oldEncPos != encoderPos) {
-      turn=0;
+      turn=0; //the reading moved, so we reset stable readings
       }
-    setSpeed();
+    setSpeed(); //set speed based on error
   }
+  //Re-initialize variables for a new reading
   integral = 0;
   speed = 0;
   cw(speed);
   Serial.flush();
   delay(1000);
+  //goto: top of loop
 }
 
 
-void setSpeed() {
-  readEncoder();
+void setSpeed() { //sets an appropriate speed based on the angle and error
+  readEncoder();//read last logged encoder position
   bool inv, neg;
 
-  error = target - current;
+  error = target - current; //error is how far of the target
 
 if (abs(error) > 180.0) { // Invert direction
     inv = 1;
@@ -145,10 +143,8 @@ if (abs(error) > 180.0) { // Invert direction
     error = abs(error);
   }
   proportional = error * kp;
-
   integral = integral + error * ki;
-
-speed = integral + proportional;
+  speed = integral + proportional;
   switch (neg) {
     case 0: // Positive error
       switch (inv) {
