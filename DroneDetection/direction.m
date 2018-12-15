@@ -60,7 +60,7 @@ function ret = direction(mexfile, packet)
         end
 
         %Angle calculation (and conversion from radians to degrees)
-        theta = 29.64*dPhase;
+        theta = 28.64*dPhase;
         
         ret = ret + theta;
     end
