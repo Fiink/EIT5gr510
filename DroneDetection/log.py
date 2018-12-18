@@ -55,6 +55,7 @@ print(result)
 if "failed" in result:
     os.execv('/log.py',[''])
     exit(1)
+print("Forcing high bandwidth")
 time.sleep(0.5)
 os.system("echo 0x1c113 | sudo tee /sys/kernel/debug/ieee80211/phy0/iwlwifi/iwldvm/debug/bcast_tx_rate")
 time.sleep(0.5)
