@@ -28,6 +28,12 @@ os.system("sudo ifconfig wlan0 up")
 time.sleep(0.2)
 print("Connecting to Specified WiFi Object")
 result = subprocess.check_output('sudo iw dev wlan0 connect -w accesspoint',shell=True)
+time.sleep(0.2)
+print(result)
+if "failed" in result:			# No connection established, stop program
+	print("Error: WiFi AP not found")
+    os.execv('/log.py',[''])
+    exit(1)
 x=0
 if len(result)>10:
     kk=result[29:37]
